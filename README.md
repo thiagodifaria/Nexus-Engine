@@ -7,7 +7,7 @@
 [![C++](https://img.shields.io/badge/C++-20-00599c?style=flat&logo=cplusplus&logoColor=white)](https://isocpp.org)
 [![CMake](https://img.shields.io/badge/CMake-3.20+-064f8c?style=flat&logo=cmake&logoColor=white)](https://cmake.org)
 [![LMAX](https://img.shields.io/badge/LMAX-Disruptor-red?style=flat)](https://lmax-exchange.github.io/disruptor/)
-[![License](https://img.shields.io/badge/License-AGPL%20v3%20%2B%20Commercial-green.svg?style=flat)](LICENSE)
+[![License](https://img.shields.io/badge/License-GNU%20v3%20%2B%20Commercial-green.svg?style=flat)](LICENSE)
 [![Development](https://img.shields.io/badge/Status-In%20Development-orange?style=flat)](https://github.com/thiagodifaria/nexus-trading)
 
 ---
