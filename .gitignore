@@ -1,0 +1,33 @@
+# Build artifacts
+/build/
+/Testing/
+/x64/
+/Release/
+/Debug/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+*.vcxproj
+*.vcxproj.filters
+*.sln
+
+# Executables and libraries
+*.exe
+*.obj
+*.lib
+
+# Log and temporary files
+*.log
+*.tlog
+*.recipe
+*.lastbuildstate
+*.db
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
