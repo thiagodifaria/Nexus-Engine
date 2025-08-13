@@ -1,6 +1,6 @@
 # Nexus Engine
 
-![Nexus Logo](https://img.shields.io/badge/Nexus-Engine-Trading%20Platform-blue?style=for-the-badge&logo=chart-line)
+![Nexus Logo](https://img.shields.io/badge/Nexus-Trading%20Platform-blue?style=for-the-badge&logo=chart-line)
 
 **Ultra-High Performance C++ Trading Engine & Backtesting Framework**
 
