@@ -1113,6 +1113,6 @@ Estudei estes recursos para entender observabilidade em sistemas de trading:
 
 ---
 
-**Nexus Engine Trading Platform** - Desenvolvido por [Thiago Di Faria]
+**Nexus Engine Trading Platform** - Desenvolvido por [Thiago Di Faria](https://github.com/thiagodifaria)
 
 Se você chegou até aqui e conseguiu explorar a stack de observabilidade completa, parabéns! Você agora sabe como monitorar, debugar e otimizar um sistema de trading algorítmico de alta performance. Implementei tudo isso pensando em facilitar sua vida quando estiver operando backtests em produção! 🚀📊
