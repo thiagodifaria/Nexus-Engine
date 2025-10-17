@@ -1,0 +1,263 @@
+# Docker Compose - Nexus Engine Trading Platform
+# Implementei este arquivo para orquestrar todos os serviços necessários
+# Decidi usar Docker Compose porque facilita o deployment e desenvolvimento local
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  # Escolhi PostgreSQL pela robustez e suporte a dados financeiros de alta precisão
+  postgres:
+    image: postgres:15-alpine
+    container_name: nexus-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nexus
+      POSTGRES_USER: nexus_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexus_secure_password}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.utf8"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus_user -d nexus"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nexus-net
+
+  # Nexus Backend Python
+  # Container principal que roda a camada Python + bindings PyBind11
+  nexus-backend:
+    build:
+      context: ../../
+      dockerfile: devops/docker/Dockerfile.python
+      args:
+        PYTHON_VERSION: "3.11"
+    container_name: nexus-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://nexus_user:${POSTGRES_PASSWORD:-nexus_secure_password}@postgres:5432/nexus
+
+      # Market Data APIs
+      FINNHUB_API_KEY: ${FINNHUB_API_KEY}
+      ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY}
+      NASDAQ_DATA_LINK_API_KEY: ${NASDAQ_DATA_LINK_API_KEY}
+      FRED_API_KEY: ${FRED_API_KEY}
+
+      # Observability
+      PROMETHEUS_PORT: 9090
+      LOKI_URL: http://loki:3100
+      TEMPO_URL: http://tempo:4317
+
+      # Application
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+    volumes:
+      # Mount do código para desenvolvimento (comentar em produção)
+      - ../../backend/python:/app/backend/python:ro
+      # Dados de mercado persistentes
+      - market-data:/app/data/market
+      # Resultados de backtests
+      - backtest-results:/app/data/backtests
+      # Logs
+      - app-logs:/app/logs
+    ports:
+      - "9090:9090"  # Prometheus metrics exporter
+      - "8000:8000"  # API (se necessário no futuro)
+    networks:
+      - nexus-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:9090/metrics')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================
+  # Observability Stack
+  # ============================================
+
+  # Prometheus - Metrics Collection
+  # Implementei Prometheus para coletar métricas do backend Python e C++ engine
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nexus-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--storage.tsdb.retention.size=50GB'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    volumes:
+      - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9091:9090"  # 9091 external (9090 já usado pelo backend)
+    networks:
+      - nexus-net
+    depends_on:
+      - nexus-backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Loki - Log Aggregation
+  # Implementei Loki para agregar logs estruturados do backend
+  loki:
+    image: grafana/loki:latest
+    container_name: nexus-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ../observability/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - nexus-net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Tempo - Distributed Tracing
+  # Implementei Tempo para rastreamento distribuído com OpenTelemetry
+  tempo:
+    image: grafana/tempo:latest
+    container_name: nexus-tempo
+    restart: unless-stopped
+    command: [ "-config.file=/etc/tempo/tempo-config.yml" ]
+    volumes:
+      - ../observability/tempo/tempo-config.yml:/etc/tempo/tempo-config.yml:ro
+      - tempo-data:/tempo
+    ports:
+      - "3200:3200"   # Tempo HTTP
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "9095:9095"   # Tempo gRPC
+      - "14268:14268" # Jaeger ingest
+    networks:
+      - nexus-net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3200/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana - Visualization & Dashboards
+  # Implementei Grafana para visualização unificada de métricas, logs e traces
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nexus-grafana
+    restart: unless-stopped
+    environment:
+      # Admin credentials
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-nexus_admin}
+
+      # Server config
+      GF_SERVER_ROOT_URL: http://localhost:3000
+      GF_SERVER_SERVE_FROM_SUB_PATH: false
+
+      # Auth (desabilitar signup para segurança)
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_AUTH_ANONYMOUS_ENABLED: false
+
+      # Plugins
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel
+
+      # Feature toggles (habilitar features experimentais úteis)
+      GF_FEATURE_TOGGLES_ENABLE: tempoSearch,tempoBackendSearch
+    volumes:
+      # Provisioning (datasources configurados automaticamente)
+      - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+
+      # Dashboards (a adicionar na FASE 24)
+      - ../observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+      # Dados persistentes
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - nexus-net
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PgAdmin (opcional - ferramenta de administração PostgreSQL)
+  # Implementei este serviço para facilitar debug e inspeção do banco de dados
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: nexus-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@nexus.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - nexus-net
+    depends_on:
+      - postgres
+    profiles:
+      - tools  # Só sobe se especificado: docker-compose --profile tools up
+
+# Networks
+# Criei uma rede bridge isolada para comunicação interna entre containers
+networks:
+  nexus-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# Volumes
+# Implementei volumes nomeados para persistência de dados críticos
+volumes:
+  # Application data
+  postgres-data:
+    driver: local
+  market-data:
+    driver: local
+  backtest-results:
+    driver: local
+  app-logs:
+    driver: local
+
+  # Observability data
+  prometheus-data:
+    driver: local
+  loki-data:
+    driver: local
+  tempo-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+  # Tools
+  pgadmin-data:
+    driver: local

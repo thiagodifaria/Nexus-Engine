@@ -1,0 +1,1 @@
+"""Value Objects - Objetos imutáveis sem identidade."""

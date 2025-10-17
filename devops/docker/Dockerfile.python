@@ -1,0 +1,150 @@
+# Stage 1: Builder - Compila C++ engine e bindings PyBind11
+FROM python:3.11-slim AS builder
+
+# Metadados da imagem
+LABEL maintainer="Nexus Engine Team"
+LABEL description="Nexus Trading Engine - Python Backend Builder"
+LABEL version="1.0"
+
+# Argumentos de build
+ARG PYTHON_VERSION=3.11
+ARG CMAKE_VERSION=3.26
+
+# Instalar dependências de build
+# Aprendi que é importante limpar cache do apt para reduzir tamanho da imagem
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Build essentials
+    build-essential \
+    cmake \
+    ninja-build \
+    git \
+    # C++ compiler e tools
+    g++ \
+    gcc \
+    gdb \
+    # Python development headers
+    python3-dev \
+    # Bibliotecas necessárias para PyBind11
+    libpython3-dev \
+    pybind11-dev \
+    # PostgreSQL client libraries
+    libpq-dev \
+    # Limpeza
+    && rm -rf /var/lib/apt/lists/*
+
+# Criar diretório de trabalho
+WORKDIR /build
+
+# Copiar apenas arquivos necessários para build do C++ engine
+# Decidi copiar seletivamente para aproveitar cache do Docker
+COPY backend/cpp/ ./backend/cpp/
+COPY CMakeLists.txt ./
+
+# Build C++ Engine
+# Implementei build com otimizações de release para máxima performance
+RUN mkdir -p build && cd build && \
+    cmake -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_FLAGS="-O3 -march=native -mtune=native" \
+    -DBUILD_TESTING=OFF \
+    .. && \
+    ninja && \
+    ninja install
+
+# Copiar arquivos Python para build dos bindings
+COPY backend/python/ ./backend/python/
+
+# Criar virtual environment
+# Aprendi que usar venv em Docker facilita gestão de dependências
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Upgrade pip e instalar wheel
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Instalar dependências Python
+RUN pip install --no-cache-dir -r backend/python/requirements.txt
+
+# Build PyBind11 bindings
+WORKDIR /build/backend/python/src/nexus_bindings
+RUN mkdir -p build && cd build && \
+    cmake -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DPYTHON_EXECUTABLE=/opt/venv/bin/python \
+    .. && \
+    ninja && \
+    ninja install
+
+# ============================================
+# Stage 2: Runtime - Imagem final lean
+# ============================================
+FROM python:3.11-slim AS runtime
+
+# Metadados
+LABEL maintainer="Nexus Engine Team"
+LABEL description="Nexus Trading Engine - Python Backend Runtime"
+LABEL version="1.0"
+
+# Criar usuário não-root para segurança
+# Decidi usar usuário dedicado para seguir best practices de segurança
+RUN groupadd -r nexus && useradd -r -g nexus -u 1000 nexus
+
+# Instalar apenas dependências de runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # PostgreSQL client
+    libpq5 \
+    # Bibliotecas C++ runtime
+    libstdc++6 \
+    # Curl para healthchecks
+    curl \
+    # Limpeza
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar virtual environment do builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Copiar C++ engine compilado
+COPY --from=builder /usr/local/lib/libnexus* /usr/local/lib/
+COPY --from=builder /usr/local/include/nexus /usr/local/include/nexus
+
+# Atualizar ldconfig
+RUN ldconfig
+
+# Criar estrutura de diretórios
+RUN mkdir -p /app/backend/python \
+    /app/data/market \
+    /app/data/backtests \
+    /app/logs \
+    && chown -R nexus:nexus /app
+
+# Definir diretório de trabalho
+WORKDIR /app
+
+# Copiar código Python
+COPY --chown=nexus:nexus backend/python/ ./backend/python/
+
+# Copiar arquivo de configuração exemplo
+COPY --chown=nexus:nexus backend/python/config/.env.example ./backend/python/config/.env.example
+
+# Ativar virtual environment
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONPATH="/app/backend/python/src:$PYTHONPATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Expor portas
+EXPOSE 9090
+EXPOSE 8000
+
+# Trocar para usuário não-root
+USER nexus
+
+# Healthcheck
+# Implementei healthcheck simples que verifica se metrics endpoint responde
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:9090/metrics || exit 1
+
+# Comando padrão
+# Decidi usar um script de entrypoint para flexibilidade futura
+# Por enquanto, mantém container rodando para que frontend possa se conectar
+CMD ["python", "-c", "import time; import prometheus_client; prometheus_client.start_http_server(9090); print('Nexus Backend started. Metrics at :9090/metrics'); time.sleep(float('inf'))"]

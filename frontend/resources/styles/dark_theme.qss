@@ -1,0 +1,423 @@
+/*
+ * Nexus Engine - Dark Theme
+ *
+ * Implementei tema escuro profissional para trading platform.
+ * Inspirado em Bloomberg Terminal e TradingView.
+ */
+
+/* ===== Main Window ===== */
+QMainWindow {
+    background-color: #1e1e1e;
+    color: #cccccc;
+}
+
+/* ===== Menu Bar ===== */
+QMenuBar {
+    background-color: #2d2d30;
+    color: #cccccc;
+    border-bottom: 1px solid #3d3d3d;
+    padding: 2px;
+}
+
+QMenuBar::item {
+    padding: 5px 10px;
+    background-color: transparent;
+}
+
+QMenuBar::item:selected {
+    background-color: #007acc;
+    color: white;
+}
+
+QMenuBar::item:pressed {
+    background-color: #005a9e;
+}
+
+/* ===== Menu (Dropdown) ===== */
+QMenu {
+    background-color: #252526;
+    color: #cccccc;
+    border: 1px solid #3d3d3d;
+    padding: 5px;
+}
+
+QMenu::item {
+    padding: 5px 25px;
+    border-radius: 3px;
+}
+
+QMenu::item:selected {
+    background-color: #007acc;
+    color: white;
+}
+
+QMenu::separator {
+    height: 1px;
+    background-color: #3d3d3d;
+    margin: 5px 0px;
+}
+
+/* ===== Status Bar ===== */
+QStatusBar {
+    background-color: #007acc;
+    color: white;
+    border-top: 1px solid #005a9e;
+}
+
+QStatusBar::item {
+    border: none;
+}
+
+/* ===== Tab Widget ===== */
+QTabWidget::pane {
+    border: 1px solid #3d3d3d;
+    background-color: #252526;
+    border-radius: 0px;
+}
+
+QTabBar::tab {
+    background-color: #2d2d30;
+    color: #cccccc;
+    padding: 10px 20px;
+    margin-right: 2px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+QTabBar::tab:selected {
+    background-color: #007acc;
+    color: white;
+}
+
+QTabBar::tab:hover {
+    background-color: #3e3e42;
+}
+
+QTabBar::tab:!selected {
+    margin-top: 2px;
+}
+
+/* ===== Labels ===== */
+QLabel {
+    color: #cccccc;
+    background-color: transparent;
+}
+
+/* ===== Group Box ===== */
+QGroupBox {
+    background-color: #252526;
+    border: 1px solid #3d3d3d;
+    border-radius: 5px;
+    margin-top: 10px;
+    padding-top: 10px;
+    font-weight: bold;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px;
+    color: #007acc;
+}
+
+/* ===== Buttons ===== */
+QPushButton {
+    background-color: #0e639c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #1177bb;
+}
+
+QPushButton:pressed {
+    background-color: #005a9e;
+}
+
+QPushButton:disabled {
+    background-color: #3d3d3d;
+    color: #808080;
+}
+
+/* ===== Line Edit (Text Input) ===== */
+QLineEdit {
+    background-color: #3c3c3c;
+    color: #cccccc;
+    border: 1px solid #3d3d3d;
+    border-radius: 3px;
+    padding: 5px;
+    selection-background-color: #007acc;
+}
+
+QLineEdit:focus {
+    border: 1px solid #007acc;
+}
+
+QLineEdit:disabled {
+    background-color: #2d2d30;
+    color: #808080;
+}
+
+/* ===== Text Edit ===== */
+QTextEdit {
+    background-color: #1e1e1e;
+    color: #cccccc;
+    border: 1px solid #3d3d3d;
+    border-radius: 3px;
+    selection-background-color: #007acc;
+}
+
+/* ===== Combo Box (Dropdown) ===== */
+QComboBox {
+    background-color: #3c3c3c;
+    color: #cccccc;
+    border: 1px solid #3d3d3d;
+    border-radius: 3px;
+    padding: 5px;
+}
+
+QComboBox:hover {
+    border: 1px solid #007acc;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #cccccc;
+    margin-right: 5px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #252526;
+    color: #cccccc;
+    border: 1px solid #3d3d3d;
+    selection-background-color: #007acc;
+}
+
+/* ===== Spin Box ===== */
+QSpinBox, QDoubleSpinBox {
+    background-color: #3c3c3c;
+    color: #cccccc;
+    border: 1px solid #3d3d3d;
+    border-radius: 3px;
+    padding: 5px;
+}
+
+QSpinBox:focus, QDoubleSpinBox:focus {
+    border: 1px solid #007acc;
+}
+
+QSpinBox::up-button, QDoubleSpinBox::up-button {
+    background-color: #2d2d30;
+    border-left: 1px solid #3d3d3d;
+    border-bottom: 1px solid #3d3d3d;
+}
+
+QSpinBox::down-button, QDoubleSpinBox::down-button {
+    background-color: #2d2d30;
+    border-left: 1px solid #3d3d3d;
+}
+
+/* ===== Date Edit ===== */
+QDateEdit {
+    background-color: #3c3c3c;
+    color: #cccccc;
+    border: 1px solid #3d3d3d;
+    border-radius: 3px;
+    padding: 5px;
+}
+
+QDateEdit:focus {
+    border: 1px solid #007acc;
+}
+
+QDateEdit::drop-down {
+    border: none;
+    width: 20px;
+}
+
+/* ===== Table Widget ===== */
+QTableWidget {
+    background-color: #1e1e1e;
+    alternate-background-color: #252526;
+    color: #cccccc;
+    gridline-color: #3d3d3d;
+    border: 1px solid #3d3d3d;
+    selection-background-color: #007acc;
+}
+
+QTableWidget::item {
+    padding: 5px;
+}
+
+QTableWidget::item:selected {
+    background-color: #007acc;
+    color: white;
+}
+
+QHeaderView::section {
+    background-color: #2d2d30;
+    color: #cccccc;
+    padding: 5px;
+    border: none;
+    border-right: 1px solid #3d3d3d;
+    border-bottom: 1px solid #3d3d3d;
+    font-weight: bold;
+}
+
+QHeaderView::section:hover {
+    background-color: #3e3e42;
+}
+
+/* ===== Progress Bar ===== */
+QProgressBar {
+    background-color: #3c3c3c;
+    border: 1px solid #3d3d3d;
+    border-radius: 3px;
+    text-align: center;
+    color: white;
+}
+
+QProgressBar::chunk {
+    background-color: #007acc;
+    border-radius: 2px;
+}
+
+/* ===== Scroll Bar (Vertical) ===== */
+QScrollBar:vertical {
+    background-color: #2d2d30;
+    width: 12px;
+    border: none;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #686868;
+    min-height: 20px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #808080;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+/* ===== Scroll Bar (Horizontal) ===== */
+QScrollBar:horizontal {
+    background-color: #2d2d30;
+    height: 12px;
+    border: none;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #686868;
+    min-width: 20px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: #808080;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
+
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: none;
+}
+
+/* ===== Splitter ===== */
+QSplitter::handle {
+    background-color: #3d3d3d;
+}
+
+QSplitter::handle:horizontal {
+    width: 2px;
+}
+
+QSplitter::handle:vertical {
+    height: 2px;
+}
+
+/* ===== Tool Tip ===== */
+QToolTip {
+    background-color: #252526;
+    color: #cccccc;
+    border: 1px solid #007acc;
+    padding: 5px;
+    border-radius: 3px;
+}
+
+/* ===== Trading Specific Colors ===== */
+
+/* Profit/Positive values */
+.profit, .positive {
+    color: #00ff00;
+    font-weight: bold;
+}
+
+/* Loss/Negative values */
+.loss, .negative {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+/* Neutral */
+.neutral {
+    color: #cccccc;
+}
+
+/* Warning */
+.warning {
+    color: #ffaa00;
+    font-weight: bold;
+}
+
+/* ===== Metric Cards ===== */
+QLabel[class="metric-card"] {
+    background-color: #2d2d30;
+    border: 1px solid #3d3d3d;
+    border-radius: 8px;
+    padding: 20px;
+    font-size: 14px;
+    min-height: 100px;
+}
+
+QLabel[class="metric-value"] {
+    font-size: 24px;
+    font-weight: bold;
+    color: #007acc;
+}
+
+/* ===== Connection Status ===== */
+QLabel[status="connected"] {
+    color: #00ff00;
+    font-weight: bold;
+}
+
+QLabel[status="disconnected"] {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+QLabel[status="connecting"] {
+    color: #ffaa00;
+    font-weight: bold;
+}

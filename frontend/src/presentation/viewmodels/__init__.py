@@ -1,0 +1,1 @@
+"""ViewModels - Gerenciamento de estado e lógica de apresentação."""

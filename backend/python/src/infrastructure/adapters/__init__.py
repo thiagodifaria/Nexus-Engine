@@ -1,0 +1,1 @@
+"""Adapters - Implementações de integrações com sistemas externos."""

@@ -1,0 +1,153 @@
+apiVersion: 1
+
+# Lista de datasources a serem provisionados
+datasources:
+  # ============================================
+  # Prometheus - Métricas
+  # ============================================
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+
+    # Configuração
+    isDefault: true  # Datasource padrão
+    editable: true
+
+    # JSON data (configurações específicas do Prometheus)
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s
+
+      # Query timeout
+      queryTimeout: 60s
+
+      # Exemplars (ligação entre métricas e traces)
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
+
+      # Cache
+      cacheLevel: 'High'
+
+      # Incremental queries
+      incrementalQuerying: true
+      disableRecordingRules: false
+
+    version: 1
+    uid: prometheus
+
+  # ============================================
+  # Loki - Logs
+  # ============================================
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+
+    # Configuração
+    isDefault: false
+    editable: true
+
+    # JSON data (configurações específicas do Loki)
+    jsonData:
+      # Tempo máximo de query
+      maxLines: 1000
+
+      # Derived fields (campos derivados para navegação)
+      derivedFields:
+        # Link de trace_id nos logs para o Tempo
+        - datasourceUid: tempo
+          matcherRegex: '"trace_id":"([^"]+)"'
+          name: TraceID
+          url: '$${__value.raw}'
+          urlDisplayLabel: 'View Trace'
+
+        # Link de request_id
+        - matcherRegex: '"request_id":"([^"]+)"'
+          name: RequestID
+          url: ''
+
+    version: 1
+    uid: loki
+
+  # ============================================
+  # Tempo - Distributed Tracing
+  # ============================================
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+
+    # Configuração
+    isDefault: false
+    editable: true
+
+    # JSON data (configurações específicas do Tempo)
+    jsonData:
+      # Timeout
+      timeout: 60
+
+      # HTTP method
+      httpMethod: GET
+
+      # Trace to logs (navegação de trace para logs)
+      tracesToLogs:
+        datasourceUid: loki
+
+        # Tags a incluir na query de logs
+        tags:
+          - 'service'
+          - 'component'
+
+        # Filter by trace ID
+        filterByTraceID: true
+        filterBySpanID: false
+
+        # Mapeamento de tags
+        mapTagNamesEnabled: true
+        mappedTags:
+          - key: 'service.name'
+            value: 'service'
+
+      # Trace to metrics (navegação de trace para métricas)
+      tracesToMetrics:
+        datasourceUid: prometheus
+
+        # Tags a incluir nas queries
+        tags:
+          - key: 'service.name'
+            value: 'service'
+          - key: 'component'
+            value: 'component'
+
+        # Queries customizadas
+        queries:
+          - name: 'Request Rate'
+            query: 'rate(nexus_api_calls_total{$$__tags}[5m])'
+
+          - name: 'Error Rate'
+            query: 'rate(nexus_errors_total{$$__tags}[5m])'
+
+          - name: 'Duration'
+            query: 'histogram_quantile(0.95, rate(nexus_request_duration_seconds_bucket{$$__tags}[5m]))'
+
+      # Service graph (gráfico de dependências entre serviços)
+      serviceMap:
+        datasourceUid: prometheus
+
+      # Node graph (visualização de traces como grafo)
+      nodeGraph:
+        enabled: true
+
+      # Search (configuração de busca de traces)
+      search:
+        hide: false
+
+      # Span bar (barra de spans na timeline)
+      spanBar:
+        type: 'Tag'
+        tag: 'http.status_code'
+
+    version: 1
+    uid: tempo

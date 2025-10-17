@@ -1,0 +1,118 @@
+global:
+  # Intervalo de scraping padrão
+  # Aprendi que 15s é um bom balanço entre granularidade e overhead
+  scrape_interval: 15s
+
+  # Timeout para cada scrape
+  scrape_timeout: 10s
+
+  # Intervalo de avaliação de regras
+  evaluation_interval: 15s
+
+  # Labels externos aplicados a todas as séries temporais
+  external_labels:
+    cluster: 'nexus-engine'
+    environment: 'production'
+
+# Configuração de alerting (para Alertmanager no futuro)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - 'alertmanager:9093'  # Descomentar quando implementar alerting
+
+# Arquivo de regras de alerta (a criar no futuro)
+rule_files:
+  # - 'alerts/*.yml'
+
+# Configuração de scraping
+# Decidi separar jobs por tipo de métrica para melhor organização
+scrape_configs:
+  # ============================================
+  # Prometheus self-monitoring
+  # ============================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+          component: 'monitoring'
+
+  # ============================================
+  # Nexus Backend Python
+  # Coleto métricas do backend Python via prometheus_client
+  # ============================================
+  - job_name: 'nexus-backend'
+    scrape_interval: 10s  # Mais frequente para métricas de trading
+    scrape_timeout: 5s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['nexus-backend:9090']
+        labels:
+          service: 'nexus-backend'
+          component: 'trading-engine'
+          layer: 'python'
+
+    # Relabeling para adicionar metadados úteis
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'nexus-backend'
+
+  # ============================================
+  # C++ Engine Metrics (via backend Python proxy)
+  # Métricas do C++ engine expostas através do Python
+  # ============================================
+  - job_name: 'nexus-cpp-engine'
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['nexus-backend:9090']
+        labels:
+          service: 'nexus-backend'
+          component: 'trading-engine'
+          layer: 'cpp'
+
+    # Filtrar apenas métricas do C++ (prefixo nexus_cpp_)
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'nexus_cpp_.*'
+        action: keep
+
+  # ============================================
+  # PostgreSQL Exporter (futuro)
+  # Para monitorar saúde do banco de dados
+  # ============================================
+  - job_name: 'postgres'
+    scrape_interval: 30s  # Menos frequente para DB
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          service: 'postgresql'
+          component: 'database'
+    # Descomentar quando adicionar postgres_exporter ao docker-compose
+
+  # ============================================
+  # Node Exporter (futuro - métricas de host)
+  # Para monitorar CPU, memória, disco do servidor
+  # ============================================
+  # - job_name: 'node'
+  #   scrape_interval: 30s
+  #   static_configs:
+  #     - targets: ['node-exporter:9100']
+  #       labels:
+  #         service: 'node-exporter'
+  #         component: 'host-metrics'
+
+# Storage (retenção de dados)
+# Decidi manter 15 dias de dados para análise histórica
+storage:
+  tsdb:
+    # Período de retenção
+    retention.time: 15d
+
+    # Tamanho máximo de armazenamento (50GB)
+    retention.size: 50GB
+
+    # Habilitar compressão
+    wal-compression: true

@@ -1,0 +1,168 @@
+# Configuração do servidor
+server:
+  http_listen_port: 3200
+  grpc_listen_port: 9095
+
+  # Logs do próprio Tempo
+  log_level: info
+
+# Configuração do distributor (recebe traces)
+distributor:
+  receivers:
+    # OTLP (OpenTelemetry Protocol) - protocolo padrão
+    otlp:
+      protocols:
+        # gRPC endpoint (porta 4317)
+        grpc:
+          endpoint: 0.0.0.0:4317
+
+        # HTTP endpoint (porta 4318)
+        http:
+          endpoint: 0.0.0.0:4318
+
+    # Jaeger (compatibilidade com Jaeger clients)
+    jaeger:
+      protocols:
+        # Thrift compact (porta 6831 UDP)
+        thrift_compact:
+          endpoint: 0.0.0.0:6831
+
+        # Thrift binary (porta 6832 UDP)
+        thrift_binary:
+          endpoint: 0.0.0.0:6832
+
+        # Thrift HTTP (porta 14268)
+        thrift_http:
+          endpoint: 0.0.0.0:14268
+
+        # gRPC (porta 14250)
+        grpc:
+          endpoint: 0.0.0.0:14250
+
+    # Zipkin (compatibilidade com Zipkin)
+    zipkin:
+      endpoint: 0.0.0.0:9411
+
+# Configuração do ingester (processa traces)
+ingester:
+  # Lifecycler
+  lifecycler:
+    address: 127.0.0.1
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+    final_sleep: 0s
+
+  # Número de traces a manter em memória
+  max_block_duration: 5m
+
+  # Flush automático
+  flush_check_period: 10s
+  flush_op_timeout: 30s
+
+# Configuração de compactor (otimiza blocos de traces)
+compactor:
+  compaction:
+    # Diretório de trabalho
+    compaction_window: 1h
+
+    # Tamanho máximo de bloco compactado (1.5GB)
+    max_compaction_objects: 1000000
+
+    # Tamanho de bloco após compactação
+    block_retention: 1h
+
+    # Período de retenção de traces compactados
+    compacted_block_retention: 1h
+
+  # Diretório de trabalho do compactor
+  working_directory: /tempo/compactor
+
+# Configuração de storage (armazenamento de traces)
+storage:
+  trace:
+    # Backend de armazenamento
+    # Opções: local, gcs, s3, azure
+    backend: local
+
+    # Configuração de armazenamento local
+    local:
+      path: /tempo/traces
+
+    # Pool de workers para escrita
+    wal:
+      path: /tempo/wal
+
+    # Cache de blocos (para leitura rápida)
+    cache: inmemory
+
+    # Configuração de pool de blocos
+    pool:
+      max_workers: 100
+      queue_depth: 10000
+
+# Configuração de limites de query
+# Implementei limites generosos mas seguros
+query_frontend:
+  # Número máximo de queries simultâneas
+  max_outstanding_per_tenant: 2000
+
+  # Query sharding (divisão de queries grandes)
+  query_shards: 2
+
+  # Cache de resultados
+  search:
+    # Durações padrão para queries
+    default_result_limit: 20
+
+    # Duração máxima de busca
+    max_duration: 0  # Sem limite
+
+# Limites globais
+overrides:
+  # Configuração padrão (sem multi-tenancy)
+  defaults:
+    # Taxa de ingestão (traces/s)
+    ingestion_rate_limit_bytes: 15000000  # 15MB/s
+    ingestion_burst_size_bytes: 20000000  # 20MB burst
+
+    # Limites de trace
+    max_traces_per_user: 10000
+    max_bytes_per_trace: 5000000  # 5MB por trace
+
+    # Retenção de blocos
+    block_retention: 720h  # 30 dias
+
+# Configuração de métricas (Tempo exporta suas próprias métricas)
+metrics_generator:
+  registry:
+    # Coleção de métricas externas
+    external_labels:
+      cluster: 'nexus-engine'
+      environment: 'production'
+
+  storage:
+    # Path para armazenar métricas geradas
+    path: /tempo/generator/wal
+
+  # Processors (processadores de spans para gerar métricas)
+  processor:
+    # Service graphs (gráficos de chamadas entre serviços)
+    service_graphs:
+      enabled: true
+      max_items: 10000
+      wait: 10s
+
+    # Span metrics (métricas derivadas de spans)
+    span_metrics:
+      enabled: true
+
+# Configuração de retenção
+# Decidi manter 30 dias de traces para análise e debugging
+retention:
+  # Período de retenção global
+  traces: 720h  # 30 dias
+
+# Configuração de multi-tenancy (desabilitado)
+multitenancy_enabled: false

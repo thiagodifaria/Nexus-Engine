@@ -1,0 +1,1 @@
+"""Repository Interfaces - Abstrações para persistência de dados."""

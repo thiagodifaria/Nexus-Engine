@@ -1,0 +1,1 @@
+"""Domain Entities - Objetos com identidade única."""
