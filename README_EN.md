@@ -4,6 +4,7 @@ Nexus is an ultra-high performance C++ trading engine and backtesting framework 
 
 ## 🎯 Features
 
+### C++ Engine Core
 - ✅ **Ultra-low latency processing**: Sub-microsecond event processing with LMAX Disruptor pattern implementation
 - ✅ **Extreme performance strategies**: 800K+ signals/second with incremental O(1) technical indicators
 - ✅ **Lock-free order book**: Realistic market simulation with atomic operations (1M+ orders/second)
@@ -12,10 +13,49 @@ Nexus is an ultra-high performance C++ trading engine and backtesting framework 
 - ✅ **Real-time optimizations**: CPU affinity, thread priority, NUMA awareness, cache warming
 - ✅ **Hardware-level timing**: TSC (Time Stamp Counter) for nanosecond precision measurement
 - ✅ **Memory optimization**: Custom pools eliminating 90%+ allocation overhead
-- ✅ **Comprehensive testing**: Full test coverage with performance stress testing
-- ✅ **Enterprise architecture**: Modular design with clear separation of concerns
+
+### Python Backend & Frontend
+- ✅ **Domain-Driven Design**: Clean Architecture with DDD patterns (Entities, Value Objects, Use Cases)
+- ✅ **PyQt6 Desktop GUI**: Professional trading interface with real-time charts and monitoring
+- ✅ **RESTful API**: FastAPI backend with comprehensive endpoints for trading operations
+- ✅ **Market Data Integration**: Real-time data from Finnhub, Alpha Vantage, Nasdaq Data Link, FRED
+- ✅ **Full Observability**: Prometheus metrics, Loki logs, Tempo traces, Grafana dashboards
+- ✅ **Comprehensive testing**: Unit, integration, and E2E tests with >80% coverage target
+- ✅ **Docker deployment**: Complete containerization with Docker Compose orchestration
 
 ## 🗃️ Architecture
+
+### High-Level System Architecture
+
+```
+Nexus Engine Trading Platform
+│
+├── 🚀 C++ Core Engine (src/cpp/)          # Ultra-high performance backtesting engine
+│   ├── LMAX Disruptor event processing    # 10-100M events/sec
+│   ├── Lock-free order book               # 1M+ orders/sec
+│   ├── Strategy execution engine          # 800K+ signals/sec
+│   └── Monte Carlo simulator              # 267K+ sims/sec
+│
+├── 🐍 Python Backend (backend/python/)    # Business logic & API layer
+│   ├── Domain Layer (DDD)                 # Entities, Value Objects, Repositories
+│   ├── Application Layer                  # Use Cases, Services
+│   ├── Infrastructure Layer               # Adapters, Database, Market Data, Telemetry
+│   └── FastAPI REST API                   # HTTP endpoints
+│
+├── 🖥️ PyQt6 Frontend (frontend/pyqt6/)    # Desktop trading application
+│   ├── MVVM Architecture                  # ViewModels + Views
+│   ├── Real-time charts                   # Live market data visualization
+│   ├── Strategy management UI             # Create, monitor, optimize strategies
+│   └── Performance dashboards             # Backtest results and analytics
+│
+└── 📊 Observability Stack (devops/)       # Monitoring & debugging
+    ├── Prometheus (Metrics)               # Trading metrics, C++ latency
+    ├── Loki (Logs)                        # Structured JSON logging
+    ├── Tempo (Traces)                     # Distributed tracing
+    └── Grafana (Visualization)            # Unified dashboards
+```
+
+### C++ Core Engine Architecture
 
 Highly optimized modular C++ architecture with performance-first design:
 
@@ -107,26 +147,56 @@ src/cpp/
 
 ## 🚀 Quick Installation
 
-### Development Build
+### Docker Deployment (Recommended)
 
 ```bash
 # Clone repository
 git clone https://github.com/thiagodifaria/Nexus-Engine.git
 cd Nexus-Engine
 
-# Create build directory
+# Start all services with Docker Compose
+docker-compose up -d
+
+# Access services
+# - Backend API: http://localhost:8001/docs
+# - Grafana: http://localhost:3000 (admin/admin)
+# - Prometheus: http://localhost:9090
+
+# View logs
+docker-compose logs -f nexus-backend
+
+# Stop all services
+docker-compose down
+```
+
+### Local Development Build
+
+```bash
+# Clone repository
+git clone https://github.com/thiagodifaria/Nexus-Engine.git
+cd Nexus-Engine
+
+# Build C++ engine
 mkdir build && cd build
-
-# Configure build (Release mode for maximum performance)
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=20
-
-# Build using all available CPU cores
 make -j$(nproc)  # Linux/Mac
 # or
 cmake --build . --config Release --parallel  # Cross-platform
 
-# Verify installation
+# Verify C++ installation
 make test
+
+# Install Python backend dependencies
+cd ../backend/python
+pip install -r requirements.txt
+
+# Run Python backend
+python -m src.main
+
+# Install and run PyQt6 frontend
+cd ../../frontend/pyqt6
+pip install -r requirements.txt
+python -m src.main
 ```
 
 ### Performance Optimization Build
@@ -763,9 +833,18 @@ private:
 
 ## 📚 Documentation & Resources
 
+### Complete Documentation
+
+Full documentation available in the `docs/` directory:
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - Complete system architecture, design decisions, and component interaction
+- **[API Reference](docs/API.md)** - REST API documentation with request/response examples
+- **[User Guide](docs/GUIDE.md)** - Installation, configuration, and usage instructions
+- **[Observability Guide](docs/OBSERVABILITY.md)** - Monitoring, logging, tracing, and troubleshooting
+
 ### API Documentation
-- **Doxygen Documentation**: Complete API reference with examples
-- **Architecture Guide**: Detailed system design and component interaction
+- **Doxygen Documentation**: Complete C++ API reference with examples
+- **FastAPI Swagger**: Interactive REST API documentation at `/docs` endpoint
 - **Performance Guide**: Optimization techniques and benchmarking methods
 - **Developer Guide**: Best practices for extending the platform
 
@@ -831,10 +910,6 @@ For commercial licensing inquiries, please contact: thiagodifaria@gmail.com
 - **Email**: thiagodifaria@gmail.com
 - **GitHub**: [@thiagodifaria](https://github.com/thiagodifaria)
 - **Project Repository**: [https://github.com/thiagodifaria/Nexus-Engine](https://github.com/thiagodifaria/Nexus-Engine)
-
-### Project Status
-- **Current Phase**: Core C++ Engine Development (In Progress)
-- **Next Phase**: Python Integration & GUI Development, Real-time Market Data Integration, Strategy Marketplace
 
 ---
 

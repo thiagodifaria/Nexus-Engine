@@ -45,19 +45,39 @@ Nexus is an **ultra-high performance C++ trading engine** designed for **institu
 ✅ Branch prediction optimization for critical code paths
 ✅ Comprehensive latency tracking and performance monitoring
 ✅ Memory pools eliminating 90%+ allocation overhead
+✅ Python backend layer with DDD + Clean Architecture
+✅ PyQt6 desktop GUI with real-time trading interface
+✅ Full observability stack (Prometheus, Loki, Tempo, Grafana)
+✅ Real-time market data integration (Finnhub, Alpha Vantage)
 ```
 
 ---
 
 ## ⚡ Quick Start
 
-### Option 1: Local Development Build
+### Option 1: Docker Deployment (Recommended)
 ```bash
 # Clone the repository
 git clone https://github.com/thiagodifaria/Nexus-Engine.git
 cd Nexus-Engine
 
-# Build with CMake (Release for maximum performance)
+# Start all services with Docker Compose
+docker-compose up -d
+
+# Access the application
+# Frontend: http://localhost:8000
+# Backend API: http://localhost:8001
+# Grafana: http://localhost:3000 (admin/admin)
+# Prometheus: http://localhost:9090
+```
+
+### Option 2: Local Development Build
+```bash
+# Clone the repository
+git clone https://github.com/thiagodifaria/Nexus-Engine.git
+cd Nexus-Engine
+
+# Build C++ engine with CMake (Release for maximum performance)
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=20
 make -j$(nproc)
@@ -65,8 +85,16 @@ make -j$(nproc)
 # Run comprehensive tests
 ctest --verbose
 
-# Run performance stress test
-./test_performance_stress
+# Install Python dependencies
+cd ../backend/python
+pip install -r requirements.txt
+
+# Run Python backend
+python -m src.main
+
+# Run PyQt6 frontend
+cd ../../frontend/pyqt6
+python -m src.main
 ```
 
 ### 🔥 Performance Benchmarks
@@ -81,7 +109,7 @@ ctest --verbose
 
 ---
 
-## 🔍 Engine Overview
+## 🔍 Platform Overview
 
 | Component | Technology | Performance | Description |
 |-----------|------------|-------------|-------------|
@@ -91,6 +119,21 @@ ctest --verbose
 | ⚙️ **Optimization** | Genetic + Grid Search | Multi-core | Advanced parameter optimization algorithms |
 | 🏦 **Order Book** | Lock-Free Architecture | 1M+ orders/sec | Realistic market simulation with atomic ops |
 | 💾 **Memory System** | Custom Pools + NUMA | 11M+ allocs/sec | Zero-overhead allocation for critical paths |
+| 🐍 **Python Backend** | DDD + Clean Architecture | FastAPI | Business logic, market data, REST API |
+| 🖥️ **Desktop Frontend** | PyQt6 + MVVM | Real-time | Professional trading interface with live charts |
+| 📊 **Observability** | Prometheus + Loki + Tempo | Full-stack | Three pillars monitoring with Grafana dashboards |
+| 📡 **Market Data** | Multi-provider Integration | Real-time | Finnhub, Alpha Vantage, Nasdaq, FRED |
+
+---
+
+## 📚 Documentation
+
+Complete documentation available in the `docs/` directory:
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - System design and component interaction
+- **[API Reference](docs/API.md)** - Complete REST API documentation
+- **[User Guide](docs/GUIDE.md)** - Setup and usage instructions
+- **[Observability Guide](docs/OBSERVABILITY.md)** - Monitoring and troubleshooting
 
 ---
 

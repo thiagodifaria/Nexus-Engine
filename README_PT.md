@@ -4,6 +4,7 @@ Nexus é um engine de trading C++ de ultra-alta performance e framework de backt
 
 ## 🎯 Funcionalidades
 
+### Engine C++ Core
 - ✅ **Processamento ultra-baixa latência**: Processamento de eventos sub-microssegundo com implementação do padrão LMAX Disruptor
 - ✅ **Estratégias performance extrema**: 800K+ sinais/segundo com indicadores técnicos incrementais O(1)
 - ✅ **Order book lock-free**: Simulação de mercado realista com operações atômicas (1M+ ordens/segundo)
@@ -12,10 +13,49 @@ Nexus é um engine de trading C++ de ultra-alta performance e framework de backt
 - ✅ **Otimizações tempo-real**: CPU affinity, prioridade thread, consciência NUMA, cache warming
 - ✅ **Timing nível hardware**: TSC (Time Stamp Counter) para medição precisão nanossegundo
 - ✅ **Otimização memória**: Pools customizados eliminando 90%+ overhead alocação
-- ✅ **Testes abrangentes**: Cobertura completa testes com stress testing performance
-- ✅ **Arquitetura empresarial**: Design modular com separação clara responsabilidades
+
+### Backend Python & Frontend
+- ✅ **Domain-Driven Design**: Clean Architecture com padrões DDD (Entities, Value Objects, Use Cases)
+- ✅ **Interface Desktop PyQt6**: Interface profissional de trading com gráficos em tempo real e monitoramento
+- ✅ **API RESTful**: Backend FastAPI com endpoints abrangentes para operações de trading
+- ✅ **Integração Dados Mercado**: Dados tempo-real de Finnhub, Alpha Vantage, Nasdaq Data Link, FRED
+- ✅ **Observabilidade Completa**: Métricas Prometheus, logs Loki, traces Tempo, dashboards Grafana
+- ✅ **Testes abrangentes**: Testes unitários, integração e E2E com meta de cobertura >80%
+- ✅ **Deploy Docker**: Containerização completa com orquestração Docker Compose
 
 ## 🗃️ Arquitetura
+
+### Arquitetura Sistema Alto-Nível
+
+```
+Plataforma Trading Nexus Engine
+│
+├── 🚀 Engine C++ Core (src/cpp/)          # Engine backtesting ultra-alta performance
+│   ├── Processamento eventos LMAX Disruptor # 10-100M eventos/seg
+│   ├── Order book lock-free               # 1M+ ordens/seg
+│   ├── Engine execução estratégias        # 800K+ sinais/seg
+│   └── Simulador Monte Carlo              # 267K+ sims/seg
+│
+├── 🐍 Backend Python (backend/python/)    # Lógica negócio & camada API
+│   ├── Camada Domínio (DDD)               # Entities, Value Objects, Repositories
+│   ├── Camada Aplicação                   # Use Cases, Services
+│   ├── Camada Infraestrutura              # Adapters, Database, Market Data, Telemetry
+│   └── API REST FastAPI                   # Endpoints HTTP
+│
+├── 🖥️ Frontend PyQt6 (frontend/pyqt6/)    # Aplicação desktop trading
+│   ├── Arquitetura MVVM                   # ViewModels + Views
+│   ├── Gráficos tempo-real                # Visualização dados mercado ao vivo
+│   ├── UI gerenciamento estratégias       # Criar, monitorar, otimizar estratégias
+│   └── Dashboards performance             # Resultados backtest e analytics
+│
+└── 📊 Stack Observabilidade (devops/)     # Monitoramento & debugging
+    ├── Prometheus (Métricas)              # Métricas trading, latência C++
+    ├── Loki (Logs)                        # Logging JSON estruturado
+    ├── Tempo (Traces)                     # Rastreamento distribuído
+    └── Grafana (Visualização)             # Dashboards unificados
+```
+
+### Arquitetura Engine C++ Core
 
 Arquitetura C++ modular altamente otimizada com design performance-first:
 
@@ -107,26 +147,56 @@ src/cpp/
 
 ## 🚀 Instalação Rápida
 
-### Build Desenvolvimento
+### Deploy Docker (Recomendado)
 
 ```bash
 # Clonar repositório
 git clone https://github.com/thiagodifaria/Nexus-Engine.git
 cd Nexus-Engine
 
-# Criar diretório build
+# Iniciar todos serviços com Docker Compose
+docker-compose up -d
+
+# Acessar serviços
+# - API Backend: http://localhost:8001/docs
+# - Grafana: http://localhost:3000 (admin/admin)
+# - Prometheus: http://localhost:9090
+
+# Visualizar logs
+docker-compose logs -f nexus-backend
+
+# Parar todos serviços
+docker-compose down
+```
+
+### Build Desenvolvimento Local
+
+```bash
+# Clonar repositório
+git clone https://github.com/thiagodifaria/Nexus-Engine.git
+cd Nexus-Engine
+
+# Build engine C++
 mkdir build && cd build
-
-# Configurar build (modo Release para máxima performance)
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=20
-
-# Build usando todos cores CPU disponíveis
 make -j$(nproc)  # Linux/Mac
 # ou
 cmake --build . --config Release --parallel  # Cross-platform
 
-# Verificar instalação
+# Verificar instalação C++
 make test
+
+# Instalar dependências backend Python
+cd ../backend/python
+pip install -r requirements.txt
+
+# Executar backend Python
+python -m src.main
+
+# Instalar e executar frontend PyQt6
+cd ../../frontend/pyqt6
+pip install -r requirements.txt
+python -m src.main
 ```
 
 ### Build Otimização Performance
@@ -763,9 +833,18 @@ private:
 
 ## 📚 Documentação & Recursos
 
+### Documentação Completa
+
+Documentação completa disponível no diretório `docs/`:
+
+- **[Guia Arquitetura](docs/ARCHITECTURE.md)** - Arquitetura completa sistema, decisões design e interação componentes
+- **[Referência API](docs/API.md)** - Documentação REST API com exemplos request/response
+- **[Guia Usuário](docs/GUIDE.md)** - Instruções instalação, configuração e uso
+- **[Guia Observabilidade](docs/OBSERVABILITY.md)** - Monitoramento, logging, tracing e troubleshooting
+
 ### Documentação API
-- **Documentação Doxygen**: Referência API completa com exemplos
-- **Guia Arquitetura**: Design sistema detalhado e interação componentes
+- **Documentação Doxygen**: Referência API C++ completa com exemplos
+- **FastAPI Swagger**: Documentação REST API interativa no endpoint `/docs`
 - **Guia Performance**: Técnicas otimização e métodos benchmarking
 - **Guia Desenvolvedor**: Melhores práticas para estender plataforma
 
@@ -831,10 +910,6 @@ Para consultas licenciamento comercial, contate: thiagodifaria@gmail.com
 - **Email**: thiagodifaria@gmail.com
 - **GitHub**: [@thiagodifaria](https://github.com/thiagodifaria)
 - **Repositório Projeto**: [https://github.com/thiagodifaria/Nexus-Engine](https://github.com/thiagodifaria/Nexus-Engine)
-
-### Status Projeto
-- **Fase Atual**: Desenvolvimento Engine C++ Core (Em Progresso)
-- **Próxima Fase**: Integração Python & Desenvolvimento GUI, Integração Dados Mercado Tempo-Real, Marketplace Estratégias
 
 ---
 
